@@ -1,0 +1,9 @@
+dump:
+  name: Dump
+  description: Log device and thing model to the HA log.
+set_properties:
+  name: Set properties
+  fields:
+    properties:
+      description: "Mapping ref -> value"
+      example: '{"3301": 1}'
