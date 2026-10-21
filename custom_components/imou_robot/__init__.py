@@ -52,7 +52,14 @@ async def async_setup_entry(hass, entry):
         await imou.set(call.data["properties"])
         await coord.async_request_refresh()
 
+    async def read_props(call):
+        """Log arbitrary property refs (service imou_robot.read_properties, e.g. refs: ['40100','1025'])."""
+        pid = await imou.ensure_product()
+        res = await api.get_props(pid, d["device_id"], [str(r) for r in call.data["refs"]])
+        _LOGGER.warning("IMOU PROPS: %s", json.dumps(res, ensure_ascii=False))
+
     hass.services.async_register(DOMAIN, "dump", dump)
+    hass.services.async_register(DOMAIN, "read_properties", read_props)
     hass.services.async_register(DOMAIN, "set_properties", setp)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True

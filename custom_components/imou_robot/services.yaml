@@ -7,3 +7,10 @@ set_properties:
     properties:
       description: "Mapping ref -> value"
       example: '{"3301": 1}'
+read_properties:
+  name: Read properties
+  description: Log raw property values to the HA log.
+  fields:
+    refs:
+      description: "List of property refs"
+      example: '["40100", "1025"]'
