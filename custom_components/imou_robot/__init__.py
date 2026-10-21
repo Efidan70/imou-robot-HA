@@ -6,7 +6,7 @@ from .api import ImouApi
 from .const import DOMAIN, PROP_REFS
 
 _LOGGER = logging.getLogger(__name__)
-PLATFORMS = ["vacuum"]
+PLATFORMS = ["vacuum", "sensor"]
 
 
 class ImouData:

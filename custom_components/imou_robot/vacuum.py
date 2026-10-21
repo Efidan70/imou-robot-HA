@@ -10,9 +10,10 @@ try:  # HA 2025.1+
 except ImportError:
     NEW = False
 
-FEATURES = (VacuumEntityFeature.START | VacuumEntityFeature.PAUSE | VacuumEntityFeature.STOP |
-            VacuumEntityFeature.RETURN_HOME | VacuumEntityFeature.BATTERY | VacuumEntityFeature.STATE |
-            VacuumEntityFeature.FAN_SPEED)
+FEATURES = VacuumEntityFeature(0)
+for _n in ("START", "PAUSE", "STOP", "RETURN_HOME", "STATE", "FAN_SPEED"):
+    if hasattr(VacuumEntityFeature, _n):
+        FEATURES |= getattr(VacuumEntityFeature, _n)
 FAN = {"quiet": 25, "standard": 50, "strong": 75, "max": 100}
 
 
@@ -46,11 +47,6 @@ class ImouVacuum(CoordinatorEntity, StateVacuumEntity):
         def state(self):
             return {"cleaning": "cleaning", "docked": "docked", "returning": "returning",
                     "paused": "paused", "error": "error"}.get(self._st(), "idle")
-
-    @property
-    def battery_level(self):
-        v = self.coordinator.data.get(P_BATTERY)
-        return abs(int(v)) if v is not None else None  # negative = charging
 
     @property
     def fan_speed(self):
