@@ -65,6 +65,13 @@ class ImouVacuum(CoordinatorEntity, StateVacuumEntity):
     async def _set(self, props):
         await self._imou.set(props)
         await self.coordinator.async_request_refresh()
+        self.hass.async_create_task(self._later())
+
+    async def _later(self):
+        import asyncio
+        for d in (4, 12):
+            await asyncio.sleep(d)
+            await self.coordinator.async_request_refresh()
 
     async def async_start(self):
         await self._set({P_HOME: True})  # app home-screen clean switch (to be verified)

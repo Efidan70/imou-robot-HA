@@ -1,30 +1,45 @@
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity, SensorStateClass
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
-from .const import DOMAIN, P_BATTERY, P_AREA, P_TIME
+from homeassistant.const import EntityCategory
+from .const import *
+from .entity import ImouEntity
+
+
+def _int(v):
+    try:
+        return int(v)
+    except (TypeError, ValueError):
+        return None
 
 
 async def async_setup_entry(hass, entry, add):
-    coord = hass.data[DOMAIN][entry.entry_id]["coord"]
-    did = entry.data["device_id"]
-    add([ImouSensor(coord, did, "battery", "Imou battery", P_BATTERY, "%", SensorDeviceClass.BATTERY, True),
-         ImouSensor(coord, did, "area", "Imou clean area", P_AREA, "m²", None, False),
-         ImouSensor(coord, did, "time", "Imou clean time", P_TIME, "min", None, False)])
+    s = hass.data[DOMAIN][entry.entry_id]
+    c, i, d = s["coord"], s["imou"], entry.data["device_id"]
+    E = EntityCategory.DIAGNOSTIC
+    add([
+        ImouSensor(c, i, d, "battery", "Imou battery", P_BATTERY, "%", SensorDeviceClass.BATTERY, lambda v: abs(_int(v)) if _int(v) is not None else None),
+        ImouSensor(c, i, d, "area", "Imou clean area", P_AREA, "m\u00b2", None, _int),
+        ImouSensor(c, i, d, "time", "Imou clean time", P_TIME, "min", None, _int),
+        ImouSensor(c, i, d, "status", "Imou status", P_STATUS, None, None, lambda v: STATUS_TEXT.get(_int(v), v)),
+        ImouSensor(c, i, d, "wifi", "Imou wifi signal", P_WIFI, None, None, lambda v: WIFI_TEXT.get(_int(v), v), E),
+        ImouSensor(c, i, d, "side_brush", "Imou side brush hours", "12202", "h", None, _int, E),
+        ImouSensor(c, i, d, "main_brush", "Imou main brush hours", "12204", "h", None, _int, E),
+        ImouSensor(c, i, d, "dust_box", "Imou dust box/filter hours", "12206", "h", None, _int, E),
+        ImouSensor(c, i, d, "sensors", "Imou sensor hours", "12208", "h", None, _int, E),
+        ImouSensor(c, i, d, "error", "Imou error code", "40501", None, None, lambda v: v, E),
+    ])
 
 
-class ImouSensor(CoordinatorEntity, SensorEntity):
-    def __init__(self, coord, did, key, name, ref, unit, dclass, absval):
-        super().__init__(coord)
-        self._ref, self._abs = ref, absval
-        self._attr_name = name
-        self._attr_unique_id = f"imou_{did}_{key}"
+class ImouSensor(ImouEntity, SensorEntity):
+    def __init__(self, c, i, did, key, name, ref, unit, dclass, conv, cat=None):
+        super().__init__(c, i, did, key, name)
+        self._ref, self._conv = ref, conv
         self._attr_native_unit_of_measurement = unit
         self._attr_device_class = dclass
-        self._attr_state_class = SensorStateClass.MEASUREMENT
+        self._attr_entity_category = cat
+        if unit:
+            self._attr_state_class = SensorStateClass.MEASUREMENT
 
     @property
     def native_value(self):
-        v = self.coordinator.data.get(self._ref)
-        if v is None:
-            return None
-        v = int(v)
-        return abs(v) if self._abs else v  # negative battery = charging
+        v = self._v(self._ref)
+        return None if v is None else self._conv(v)

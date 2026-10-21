@@ -3,10 +3,10 @@ from datetime import timedelta
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from .api import ImouApi
-from .const import DOMAIN, PROP_REFS
+from .const import DOMAIN, PROP_REFS, ACTIVE, P_STATUS
 
 _LOGGER = logging.getLogger(__name__)
-PLATFORMS = ["vacuum", "sensor"]
+PLATFORMS = ["vacuum", "sensor", "number", "switch", "binary_sensor", "button"]
 
 
 class ImouData:
@@ -23,12 +23,26 @@ class ImouData:
         pid = await self.ensure_product()
         res = await self.api.get_props(pid, self.device_id, PROP_REFS)
         data = dict(res.get("properties") or {})
+        for k, v in list(data.items()):          # flatten struct values (life, DND, error info)
+            if isinstance(v, str) and v.startswith("{"):
+                try:
+                    v = json.loads(v)
+                    data[k] = v
+                except ValueError:
+                    pass
+            if isinstance(v, dict):
+                for kk, vv in v.items():
+                    data[str(kk)] = vv
         data["_status"] = res.get("status")
         return data
 
     async def set(self, props):
         pid = await self.ensure_product()
         return await self.api.set_props(pid, self.device_id, props)
+
+    async def control(self, ref, content=None):
+        pid = await self.ensure_product()
+        return await self.api.control(pid, self.device_id, ref, content)
 
 
 async def async_setup_entry(hass, entry):
@@ -38,6 +52,18 @@ async def async_setup_entry(hass, entry):
     coord = DataUpdateCoordinator(
         hass, _LOGGER, name=DOMAIN, update_method=imou.fetch,
         update_interval=timedelta(seconds=120))  # keeps within 30,000 free API calls/month
+    inner = imou.fetch
+
+    async def adaptive():
+        data = await inner()
+        try:   # poll faster while the robot is active, slow when idle (API quota: 30,000 calls/month)
+            active = int(data.get(P_STATUS)) in ACTIVE
+        except (TypeError, ValueError):
+            active = False
+        coord.update_interval = timedelta(seconds=30 if active else 120)
+        return data
+
+    coord.update_method = adaptive
     await coord.async_config_entry_first_refresh()
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {"imou": imou, "coord": coord}
 

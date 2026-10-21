@@ -1,4 +1,4 @@
-import hashlib, sys, pathlib
+import sys, pathlib
 sys.path.insert(0, str(pathlib.Path(__file__).parent.parent))
 
 
@@ -8,8 +8,8 @@ def test_sign_vector():
                      "test123456789test123456789") == "xjhCQBoJ9hRDsCjyDcHjtDNzRZ3ZJezcawsfWeiaoxU="
 
 
-def test_platforms_import():
-    import custom_components.imou_robot.vacuum as v
-    import custom_components.imou_robot.sensor as s
+def test_all_platforms_import():
+    import importlib
     import custom_components.imou_robot as init
-    assert v.FEATURES and s.ImouSensor and init.PLATFORMS
+    for p in init.PLATFORMS:
+        assert importlib.import_module(f"custom_components.imou_robot.{p}")

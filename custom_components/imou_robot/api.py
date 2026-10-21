@@ -51,3 +51,7 @@ class ImouApi:
 
     async def set_props(self, product_id, device_id, props):
         return await self.authed("setIotDeviceProperties", {"productId": product_id, "deviceId": device_id, "properties": props})
+
+    async def control(self, product_id, device_id, ref, content=None):
+        return await self.authed("iotDeviceControl", {"productId": product_id, "deviceId": device_id,
+                                                      "ref": str(ref), "content": content or {}})
