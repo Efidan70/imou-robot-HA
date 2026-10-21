@@ -55,3 +55,9 @@ class ImouApi:
     async def control(self, product_id, device_id, ref, content=None):
         return await self.authed("iotDeviceControl", {"productId": product_id, "deviceId": device_id,
                                                       "ref": str(ref), "content": content or {}})
+
+    async def list_devices(self):
+        """Devices bound to the account (IoT devices have a productId)."""
+        d = await self.authed("listDeviceDetailsByPage",
+                              {"bindId": -1, "limit": 50, "type": "bindAndShare", "needApInfo": False})
+        return d.get("deviceList") or []

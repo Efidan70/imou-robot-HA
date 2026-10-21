@@ -6,10 +6,10 @@ from .entity import ImouEntity
 
 async def async_setup_entry(hass, entry, add):
     s = hass.data[DOMAIN][entry.entry_id]
-    c, i, d = s["coord"], s["imou"], entry.data["device_id"]
-    add([ImouNumber(c, i, d, "water", "Imou water level", P_WATER, "mdi:water"),
-         ImouNumber(c, i, d, "suction", "Imou suction power", P_FAN, "mdi:fan"),
-         ImouNumber(c, i, d, "volume", "Imou voice volume", P_VOLUME, "mdi:volume-high", EntityCategory.CONFIG)])
+    c, i, d = s["coord"], s["imou"], entry
+    add([ImouNumber(c, i, d, "water", "Water level", P_WATER, "mdi:water"),
+         ImouNumber(c, i, d, "suction", "Suction power", P_FAN, "mdi:fan"),
+         ImouNumber(c, i, d, "volume", "Voice volume", P_VOLUME, "mdi:volume-high", EntityCategory.CONFIG)])
 
 
 class ImouNumber(ImouEntity, NumberEntity):

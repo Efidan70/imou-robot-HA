@@ -5,10 +5,10 @@ from .entity import ImouEntity
 
 async def async_setup_entry(hass, entry, add):
     s = hass.data[DOMAIN][entry.entry_id]
-    c, i, d = s["coord"], s["imou"], entry.data["device_id"]
+    c, i, d = s["coord"], s["imou"], entry
     # thing-model services; the call format is based on the Imou docs but unverified (experimental)
-    add([ImouButton(c, i, d, "locate", "Imou locate robot", "20400", "mdi:map-marker"),
-         ImouButton(c, i, d, "empty_dust", "Imou empty dust", "2300", "mdi:delete-empty")])
+    add([ImouButton(c, i, d, "locate", "Locate robot", "20400", "mdi:map-marker"),
+         ImouButton(c, i, d, "empty_dust", "Empty dust bin", "2300", "mdi:delete-empty")])
 
 
 class ImouButton(ImouEntity, ButtonEntity):

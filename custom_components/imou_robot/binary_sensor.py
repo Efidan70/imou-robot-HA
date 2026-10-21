@@ -5,7 +5,7 @@ from .entity import ImouEntity
 
 async def async_setup_entry(hass, entry, add):
     s = hass.data[DOMAIN][entry.entry_id]
-    c, i, d = s["coord"], s["imou"], entry.data["device_id"]
+    c, i, d = s["coord"], s["imou"], entry
     add([Mop(c, i, d), Charging(c, i, d), Online(c, i, d)])
 
 
@@ -13,7 +13,7 @@ class Mop(ImouEntity, BinarySensorEntity):
     _attr_icon = "mdi:water-pump"
 
     def __init__(self, c, i, d):
-        super().__init__(c, i, d, "mop", "Imou mop attached")
+        super().__init__(c, i, d, "mop", "Mop attached")
 
     @property
     def is_on(self):
@@ -25,7 +25,7 @@ class Charging(ImouEntity, BinarySensorEntity):
     _attr_device_class = BinarySensorDeviceClass.BATTERY_CHARGING
 
     def __init__(self, c, i, d):
-        super().__init__(c, i, d, "charging", "Imou charging")
+        super().__init__(c, i, d, "charging", "Charging")
 
     @property
     def is_on(self):
@@ -39,7 +39,7 @@ class Online(ImouEntity, BinarySensorEntity):
     _attr_device_class = BinarySensorDeviceClass.CONNECTIVITY
 
     def __init__(self, c, i, d):
-        super().__init__(c, i, d, "online", "Imou cloud connection")
+        super().__init__(c, i, d, "online", "Cloud connection")
 
     @property
     def is_on(self):

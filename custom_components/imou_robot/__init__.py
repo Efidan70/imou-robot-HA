@@ -3,7 +3,7 @@ from datetime import timedelta
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from .api import ImouApi
-from .const import DOMAIN, PROP_REFS, ACTIVE, P_STATUS
+from .const import DOMAIN, PROP_REFS, ACTIVE, P_STATUS, CONF_IDLE, CONF_ACTIVE, DEFAULT_IDLE, DEFAULT_ACTIVE
 
 _LOGGER = logging.getLogger(__name__)
 PLATFORMS = ["vacuum", "sensor", "number", "switch", "binary_sensor", "button"]
@@ -51,7 +51,7 @@ async def async_setup_entry(hass, entry):
     imou = ImouData(api, d["device_id"])
     coord = DataUpdateCoordinator(
         hass, _LOGGER, name=DOMAIN, update_method=imou.fetch,
-        update_interval=timedelta(seconds=120))  # keeps within 30,000 free API calls/month
+        update_interval=timedelta(seconds=entry.options.get(CONF_IDLE, DEFAULT_IDLE)))  # keeps within 30,000 free API calls/month
     inner = imou.fetch
 
     async def adaptive():
@@ -60,7 +60,9 @@ async def async_setup_entry(hass, entry):
             active = int(data.get(P_STATUS)) in ACTIVE
         except (TypeError, ValueError):
             active = False
-        coord.update_interval = timedelta(seconds=30 if active else 120)
+        opt = entry.options
+        coord.update_interval = timedelta(seconds=opt.get(CONF_ACTIVE, DEFAULT_ACTIVE) if active
+                                          else opt.get(CONF_IDLE, DEFAULT_IDLE))
         return data
 
     coord.update_method = adaptive
@@ -88,6 +90,7 @@ async def async_setup_entry(hass, entry):
     hass.services.async_register(DOMAIN, "read_properties", read_props)
     hass.services.async_register(DOMAIN, "set_properties", setp)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    entry.async_on_unload(entry.add_update_listener(_reload))
     return True
 
 
@@ -96,3 +99,7 @@ async def async_unload_entry(hass, entry):
     if ok:
         hass.data[DOMAIN].pop(entry.entry_id, None)
     return ok
+
+
+async def _reload(hass, entry):
+    await hass.config_entries.async_reload(entry.entry_id)

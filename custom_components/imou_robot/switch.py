@@ -6,13 +6,13 @@ from .entity import ImouEntity
 
 async def async_setup_entry(hass, entry, add):
     s = hass.data[DOMAIN][entry.entry_id]
-    c, i, d = s["coord"], s["imou"], entry.data["device_id"]
-    add([ImouSwitch(c, i, d, "light", "Imou indicator light", P_LIGHT, P_LIGHT, "mdi:led-on"),
-         ImouSwitch(c, i, d, "keep_clean", "Imou resume cleaning after charge", P_KEEP, P_KEEP, "mdi:restart"),
-         ImouSwitch(c, i, d, "auto_dust", "Imou auto empty dust", P_DUST, P_DUST, "mdi:delete-empty"),
-         ImouSwitch(c, i, d, "rug_press", "Imou carpet boost", P_RUG, P_RUG, "mdi:rug"),
+    c, i, d = s["coord"], s["imou"], entry
+    add([ImouSwitch(c, i, d, "light", "Indicator light", P_LIGHT, P_LIGHT, "mdi:led-on"),
+         ImouSwitch(c, i, d, "keep_clean", "Resume cleaning after charging", P_KEEP, P_KEEP, "mdi:restart"),
+         ImouSwitch(c, i, d, "auto_dust", "Auto empty dust bin", P_DUST, P_DUST, "mdi:delete-empty"),
+         ImouSwitch(c, i, d, "rug_press", "Carpet boost", P_RUG, P_RUG, "mdi:rug"),
          # struct property: the exact write format is unverified (experimental)
-         ImouSwitch(c, i, d, "dnd", "Imou do not disturb", "40201", P_DND, "mdi:sleep", struct="40201")])
+         ImouSwitch(c, i, d, "dnd", "Do not disturb", "40201", P_DND, "mdi:sleep", struct="40201")])
 
 
 class ImouSwitch(ImouEntity, SwitchEntity):

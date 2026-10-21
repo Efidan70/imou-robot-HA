@@ -13,19 +13,19 @@ def _int(v):
 
 async def async_setup_entry(hass, entry, add):
     s = hass.data[DOMAIN][entry.entry_id]
-    c, i, d = s["coord"], s["imou"], entry.data["device_id"]
+    c, i, d = s["coord"], s["imou"], entry
     E = EntityCategory.DIAGNOSTIC
     add([
-        ImouSensor(c, i, d, "battery", "Imou battery", P_BATTERY, "%", SensorDeviceClass.BATTERY, lambda v: abs(_int(v)) if _int(v) is not None else None),
-        ImouSensor(c, i, d, "area", "Imou clean area", P_AREA, "m\u00b2", None, _int),
-        ImouSensor(c, i, d, "time", "Imou clean time", P_TIME, "min", None, _int),
-        ImouSensor(c, i, d, "status", "Imou status", P_STATUS, None, None, lambda v: STATUS_TEXT.get(_int(v), v)),
-        ImouSensor(c, i, d, "wifi", "Imou wifi signal", P_WIFI, None, None, lambda v: WIFI_TEXT.get(_int(v), v), E),
-        ImouSensor(c, i, d, "side_brush", "Imou side brush hours", "12202", "h", None, _int, E),
-        ImouSensor(c, i, d, "main_brush", "Imou main brush hours", "12204", "h", None, _int, E),
-        ImouSensor(c, i, d, "dust_box", "Imou dust box/filter hours", "12206", "h", None, _int, E),
-        ImouSensor(c, i, d, "sensors", "Imou sensor hours", "12208", "h", None, _int, E),
-        ImouSensor(c, i, d, "error", "Imou error code", "40501", None, None, lambda v: v, E),
+        ImouSensor(c, i, d, "battery", "Battery", P_BATTERY, "%", SensorDeviceClass.BATTERY, lambda v: abs(_int(v)) if _int(v) is not None else None),
+        ImouSensor(c, i, d, "area", "Cleaned area", P_AREA, "m\u00b2", None, _int),
+        ImouSensor(c, i, d, "time", "Cleaning time", P_TIME, "min", None, _int),
+        ImouSensor(c, i, d, "status", "Status", P_STATUS, None, None, lambda v: STATUS_TEXT.get(_int(v), v)),
+        ImouSensor(c, i, d, "wifi", "Wi-Fi signal", P_WIFI, None, None, lambda v: WIFI_TEXT.get(_int(v), v), E),
+        ImouSensor(c, i, d, "side_brush", "Side brush usage", "12202", "h", None, _int, E),
+        ImouSensor(c, i, d, "main_brush", "Main brush usage", "12204", "h", None, _int, E),
+        ImouSensor(c, i, d, "dust_box", "Dust box and filter usage", "12206", "h", None, _int, E),
+        ImouSensor(c, i, d, "sensors", "Sensors usage", "12208", "h", None, _int, E),
+        ImouSensor(c, i, d, "error", "Error code", "40501", None, None, lambda v: v, E),
     ])
 
 

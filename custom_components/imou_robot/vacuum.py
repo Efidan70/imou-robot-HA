@@ -1,6 +1,6 @@
 from homeassistant.components.vacuum import StateVacuumEntity, VacuumEntityFeature
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from .const import *
+from .entity import ImouEntity
 
 try:  # HA 2025.1+
     from homeassistant.components.vacuum import VacuumActivity
@@ -22,19 +22,17 @@ async def async_setup_entry(hass, entry, add):
     add([ImouVacuum(s["coord"], s["imou"], entry)])
 
 
-class ImouVacuum(CoordinatorEntity, StateVacuumEntity):
-    _attr_name = "Imou robot"
+class ImouVacuum(ImouEntity, StateVacuumEntity):
     _attr_supported_features = FEATURES
     _attr_fan_speed_list = list(FAN)
 
     def __init__(self, coord, imou, entry):
-        super().__init__(coord)
-        self._imou = imou
-        self._attr_unique_id = f"imou_{entry.data['device_id']}"
+        super().__init__(coord, imou, entry, "vacuum", None)   # main entity of the device: no suffix
+        self._attr_unique_id = f"imou_{entry.data['device_id']}"  # keep the id used by earlier versions
 
     def _st(self):
         try:
-            return STATUS.get(int(self.coordinator.data.get(P_STATUS)), "idle")
+            return STATUS.get(int(self._v(P_STATUS)), "idle")
         except (TypeError, ValueError):
             return "idle"
 
@@ -45,36 +43,22 @@ class ImouVacuum(CoordinatorEntity, StateVacuumEntity):
     else:
         @property
         def state(self):
-            return {"cleaning": "cleaning", "docked": "docked", "returning": "returning",
-                    "paused": "paused", "error": "error"}.get(self._st(), "idle")
+            return self._st()
 
     @property
     def fan_speed(self):
-        v = self.coordinator.data.get(P_FAN)
+        v = self._v(P_FAN)
         if v is None:
             return None
         return min(FAN, key=lambda k: abs(FAN[k] - int(v)))
 
     @property
     def extra_state_attributes(self):
-        d = self.coordinator.data
-        return {"clean_area_m2": d.get(P_AREA), "clean_time_min": d.get(P_TIME),
-                "water_level": d.get(P_WATER), "cloud_status": d.get("_status"),
-                "raw_work_status": d.get(P_STATUS), "home_switch": d.get(P_HOME)}
-
-    async def _set(self, props):
-        await self._imou.set(props)
-        await self.coordinator.async_request_refresh()
-        self.hass.async_create_task(self._later())
-
-    async def _later(self):
-        import asyncio
-        for d in (4, 12):
-            await asyncio.sleep(d)
-            await self.coordinator.async_request_refresh()
+        return {"cleaned_area_m2": self._v(P_AREA), "cleaning_time_min": self._v(P_TIME),
+                "water_level": self._v(P_WATER)}
 
     async def async_start(self):
-        await self._set({P_HOME: True})  # app home-screen clean switch (to be verified)
+        await self._set({P_HOME: True})
 
     async def async_pause(self):
         await self._set({P_HOME: False})

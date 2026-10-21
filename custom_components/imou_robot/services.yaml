@@ -1,16 +1,15 @@
-dump:
-  name: Dump
-  description: Log device and thing model to the HA log.
-set_properties:
-  name: Set properties
-  fields:
-    properties:
-      description: "Mapping ref -> value"
-      example: '{"3301": 1}'
+dump: {}
 read_properties:
-  name: Read properties
-  description: Log raw property values to the HA log.
   fields:
     refs:
-      description: "List of property refs"
-      example: '["40100", "1025"]'
+      required: true
+      example: '["11600", "12300"]'
+      selector:
+        object:
+set_properties:
+  fields:
+    properties:
+      required: true
+      example: '{"11400": true}'
+      selector:
+        object:

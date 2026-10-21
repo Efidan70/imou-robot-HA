@@ -1,1 +1,76 @@
-{"config":{"step":{"user":{"title":"Imou Open Platform","data":{"app_id":"App ID","app_secret":"App Secret","device_id":"Serienummer robot","base_url":"API URL"}}},"error":{"auth":"Inloggen mislukt"}}}
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Connect to Imou Open Platform",
+        "description": "Enter the App ID and App Secret of your application on open.imoulife.com (Console > My App > Application Information) and pick the data center shown there.",
+        "data": {
+          "app_id": "App ID",
+          "app_secret": "App Secret",
+          "datacenter": "Data center"
+        }
+      },
+      "device": {
+        "title": "Choose your robot",
+        "description": "Select the robot vacuum. If the list is empty, type its serial number (printed on the robot / shown in the Imou Life app).",
+        "data": {
+          "device_id": "Robot"
+        }
+      },
+      "reauth_confirm": {
+        "title": "Sign in again",
+        "description": "Your App ID or App Secret is no longer accepted.",
+        "data": {
+          "app_id": "App ID",
+          "app_secret": "App Secret"
+        }
+      }
+    },
+    "error": {
+      "invalid_auth": "App ID or App Secret not accepted. Check them and the data center.",
+      "cannot_connect": "Could not reach the Imou cloud."
+    },
+    "abort": {
+      "already_configured": "This robot is already set up.",
+      "reauth_successful": "Credentials updated."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Update speed",
+        "description": "Imou allows 30,000 free API calls per month. Updating every 120 s when idle and every 30 s while cleaning stays within that.",
+        "data": {
+          "idle_interval": "Seconds between updates when idle",
+          "active_interval": "Seconds between updates while cleaning"
+        }
+      }
+    }
+  },
+  "services": {
+    "dump": {
+      "name": "Dump device info",
+      "description": "Write device details and thing model to the Home Assistant log."
+    },
+    "read_properties": {
+      "name": "Read properties",
+      "description": "Write raw property values to the log.",
+      "fields": {
+        "refs": {
+          "name": "Property refs",
+          "description": "List of property numbers."
+        }
+      }
+    },
+    "set_properties": {
+      "name": "Set properties",
+      "description": "Write raw property values to the robot.",
+      "fields": {
+        "properties": {
+          "name": "Properties",
+          "description": "Mapping of property number to value."
+        }
+      }
+    }
+  }
+}
