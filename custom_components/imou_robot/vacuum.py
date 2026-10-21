@@ -60,20 +60,20 @@ class ImouVacuum(CoordinatorEntity, StateVacuumEntity):
         d = self.coordinator.data
         return {"clean_area_m2": d.get(P_AREA), "clean_time_min": d.get(P_TIME),
                 "water_level": d.get(P_WATER), "cloud_status": d.get("_status"),
-                "raw_work_status": d.get(P_STATUS)}
+                "raw_work_status": d.get(P_STATUS), "home_switch": d.get(P_HOME)}
 
     async def _set(self, props):
         await self._imou.set(props)
         await self.coordinator.async_request_refresh()
 
     async def async_start(self):
-        await self._set({P_STATUS: 12})  # whole-house clean (to be verified on the real robot)
+        await self._set({P_HOME: True})  # app home-screen clean switch (to be verified)
 
     async def async_pause(self):
-        await self._set({P_STATUS: 1})
+        await self._set({P_HOME: False})
 
     async def async_stop(self, **kw):
-        await self._set({P_STATUS: 0})
+        await self._set({P_HOME: False})
 
     async def async_return_to_base(self, **kw):
         await self._set({P_DOCK: True})
