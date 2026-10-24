@@ -1,7 +1,7 @@
 import json, logging
 from datetime import timedelta
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from .api import ImouApi
 from .const import DOMAIN, PROP_REFS, ACTIVE, P_STATUS, CONF_IDLE, CONF_ACTIVE, DEFAULT_IDLE, DEFAULT_ACTIVE
 
@@ -54,15 +54,23 @@ async def async_setup_entry(hass, entry):
         update_interval=timedelta(seconds=entry.options.get(CONF_IDLE, DEFAULT_IDLE)))  # keeps within 30,000 free API calls/month
     inner = imou.fetch
 
+    fails = {"n": 0}
+
     async def adaptive():
-        data = await inner()
-        try:   # poll faster while the robot is active, slow when idle (API quota: 30,000 calls/month)
+        opt = entry.options
+        idle, act = opt.get(CONF_IDLE, DEFAULT_IDLE), opt.get(CONF_ACTIVE, DEFAULT_ACTIVE)
+        try:
+            data = await inner()
+        except Exception as err:  # back off so a quota/outage does not burn more API calls
+            fails["n"] += 1
+            coord.update_interval = timedelta(seconds=min(3600, idle * 2 ** min(fails["n"], 5)))
+            raise UpdateFailed(f"Imou request failed ({err}); retrying in {int(coord.update_interval.total_seconds())} s") from err
+        fails["n"] = 0
+        try:   # poll faster while the robot is active, slower when idle (API quota: 30,000 calls/month)
             active = int(data.get(P_STATUS)) in ACTIVE
         except (TypeError, ValueError):
             active = False
-        opt = entry.options
-        coord.update_interval = timedelta(seconds=opt.get(CONF_ACTIVE, DEFAULT_ACTIVE) if active
-                                          else opt.get(CONF_IDLE, DEFAULT_IDLE))
+        coord.update_interval = timedelta(seconds=act if active else idle)
         return data
 
     coord.update_method = adaptive

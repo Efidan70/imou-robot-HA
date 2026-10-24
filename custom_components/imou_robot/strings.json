@@ -39,7 +39,7 @@
     "step": {
       "init": {
         "title": "Update speed",
-        "description": "Imou allows 30,000 free API calls per month. Updating every 120 s when idle and every 30 s while cleaning stays within that.",
+        "description": "Imou allows 30,000 free API calls per month. Updating every 300 s when idle and every 60 s while cleaning stays within that.",
         "data": {
           "idle_interval": "Seconds between updates when idle",
           "active_interval": "Seconds between updates while cleaning"

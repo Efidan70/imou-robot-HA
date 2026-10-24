@@ -39,7 +39,7 @@
     "step": {
       "init": {
         "title": "Verversingssnelheid",
-        "description": "Imou geeft 30.000 gratis API-aanroepen per maand. Elke 120 s verversen in rust en elke 30 s tijdens het schoonmaken past daarbinnen.",
+        "description": "Imou geeft 30.000 gratis API-aanroepen per maand. Elke 300 s verversen in rust en elke 60 s tijdens het schoonmaken past daarbinnen.",
         "data": {
           "idle_interval": "Seconden tussen updates in rust",
           "active_interval": "Seconden tussen updates tijdens schoonmaken"

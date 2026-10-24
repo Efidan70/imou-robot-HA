@@ -19,8 +19,8 @@ Control your **Imou robot vacuum** (built for the **RV-L11-A**) from Home Assist
 | **Buttons** | Locate robot, empty dust bin *(experimental)* |
 | **Binary sensors** | Charging, mop attached, cloud connection |
 
-All entities appear under **one device**. Updates are faster while the robot is cleaning (every 30 s) and slower
-when it is idle (every 120 s). You can change both in the integration options.
+All entities appear under **one device**. Updates are faster while the robot is cleaning (every 60 s) and slower
+when it is idle (every 5 minutes). After errors the integration backs off automatically. You can change both in the integration options.
 
 **Not available:** the floor map, cleaning schedule and room-by-room cleaning. The Imou cloud does not expose
 these in a readable form.

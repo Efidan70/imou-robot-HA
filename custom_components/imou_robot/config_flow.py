@@ -90,8 +90,8 @@ class OptionsFlow(config_entries.OptionsFlow):
         o = self.config_entry.options
         schema = vol.Schema({
             vol.Required(CONF_IDLE, default=o.get(CONF_IDLE, DEFAULT_IDLE)): selector.NumberSelector(
-                selector.NumberSelectorConfig(min=60, max=900, step=10, unit_of_measurement="s", mode="box")),
+                selector.NumberSelectorConfig(min=120, max=1800, step=10, unit_of_measurement="s", mode="box")),
             vol.Required(CONF_ACTIVE, default=o.get(CONF_ACTIVE, DEFAULT_ACTIVE)): selector.NumberSelector(
-                selector.NumberSelectorConfig(min=10, max=120, step=5, unit_of_measurement="s", mode="box")),
+                selector.NumberSelectorConfig(min=30, max=300, step=5, unit_of_measurement="s", mode="box")),
         })
         return self.async_show_form(step_id="init", data_schema=schema)
