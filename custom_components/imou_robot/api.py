@@ -15,12 +15,15 @@ class ImouApi:
     def __init__(self, session: ClientSession, base_url, app_id, app_secret):
         self._s, self._url, self._id, self._secret = session, base_url.rstrip("/"), app_id, app_secret
         self._token, self._exp = None, 0
+        self.on_call = None          # optional callback, called once per HTTP request (API quota counter)
 
     def _system(self):
         t = int(time.time()); n = uuid.uuid4().hex
         return {"ver": "1.0", "appId": self._id, "sign": calc_sign(t, n, self._secret), "time": t, "nonce": n}
 
     async def call(self, method, params=None):
+        if self.on_call:
+            self.on_call()
         body = {"system": self._system(), "id": uuid.uuid4().hex, "params": params or {}}
         async with self._s.post(f"{self._url}/openapi/{method}", json=body, timeout=20) as r:
             data = await r.json(content_type=None)

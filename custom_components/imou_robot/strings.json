@@ -38,11 +38,13 @@
   "options": {
     "step": {
       "init": {
-        "title": "Update speed",
-        "description": "Imou allows 30,000 free API calls per month. Updating every 300 s when idle and every 60 s while cleaning stays within that.",
+        "title": "Update speed and API budget",
+        "description": "Imou allows 30,000 free API calls per month. Updates slow down automatically when nothing changes, and never go faster than your monthly budget allows. The sensor 'API calls this month' shows your usage.",
         "data": {
           "idle_interval": "Seconds between updates when idle",
-          "active_interval": "Seconds between updates while cleaning"
+          "active_interval": "Seconds between updates while cleaning",
+          "deep_idle_interval": "Slowest interval (s) when nothing has changed for a while",
+          "monthly_budget": "Monthly API call budget (free quota is 30,000)"
         }
       }
     }

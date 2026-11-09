@@ -3,7 +3,9 @@ from datetime import timedelta
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from .api import ImouApi
-from .const import DOMAIN, PROP_REFS, ACTIVE, P_STATUS, CONF_IDLE, CONF_ACTIVE, DEFAULT_IDLE, DEFAULT_ACTIVE
+from .budget import Budget
+from .const import (DOMAIN, PROP_REFS, ACTIVE, P_STATUS, CONF_IDLE, CONF_ACTIVE, CONF_DEEP, CONF_BUDGET,
+                    DEFAULT_IDLE, DEFAULT_ACTIVE, DEFAULT_DEEP, DEFAULT_BUDGET)
 
 _LOGGER = logging.getLogger(__name__)
 PLATFORMS = ["vacuum", "sensor", "number", "switch", "binary_sensor", "button"]
@@ -49,16 +51,21 @@ async def async_setup_entry(hass, entry):
     d = entry.data
     api = ImouApi(async_get_clientsession(hass), d["base_url"], d["app_id"], d["app_secret"])
     imou = ImouData(api, d["device_id"])
+    budget = Budget(hass, entry.entry_id, entry.options.get(CONF_BUDGET, DEFAULT_BUDGET))
+    await budget.load()
+    api.on_call = budget.count
     coord = DataUpdateCoordinator(
         hass, _LOGGER, name=DOMAIN, update_method=imou.fetch,
         update_interval=timedelta(seconds=entry.options.get(CONF_IDLE, DEFAULT_IDLE)))  # keeps within 30,000 free API calls/month
     inner = imou.fetch
 
     fails = {"n": 0}
+    calm = {"n": 0, "last": None}   # consecutive polls with an unchanged idle state
 
     async def adaptive():
         opt = entry.options
         idle, act = opt.get(CONF_IDLE, DEFAULT_IDLE), opt.get(CONF_ACTIVE, DEFAULT_ACTIVE)
+        deep = max(idle, opt.get(CONF_DEEP, DEFAULT_DEEP))
         try:
             data = await inner()
         except Exception as err:  # back off so a quota/outage does not burn more API calls
@@ -66,16 +73,25 @@ async def async_setup_entry(hass, entry):
             coord.update_interval = timedelta(seconds=min(3600, idle * 2 ** min(fails["n"], 5)))
             raise UpdateFailed(f"Imou request failed ({err}); retrying in {int(coord.update_interval.total_seconds())} s") from err
         fails["n"] = 0
-        try:   # poll faster while the robot is active, slower when idle (API quota: 30,000 calls/month)
+        try:
             active = int(data.get(P_STATUS)) in ACTIVE
         except (TypeError, ValueError):
             active = False
-        coord.update_interval = timedelta(seconds=act if active else idle)
+        key = (data.get(P_STATUS), data.get("11500"))
+        calm["n"] = calm["n"] + 1 if (not active and key == calm["last"]) else 0
+        calm["last"] = key
+        if active:
+            base = act
+        elif calm["n"] >= 6:       # nothing changed for a while: slow down towards the deep-idle interval
+            base = min(deep, idle * 2 ** min(calm["n"] // 6, 4))
+        else:
+            base = idle
+        coord.update_interval = timedelta(seconds=max(base, budget.floor_interval()))   # never exceed the monthly budget
         return data
 
     coord.update_method = adaptive
     await coord.async_config_entry_first_refresh()
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {"imou": imou, "coord": coord}
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {"imou": imou, "coord": coord, "budget": budget}
 
     async def dump(call):
         dev = await api.device(d["device_id"])
@@ -105,7 +121,9 @@ async def async_setup_entry(hass, entry):
 async def async_unload_entry(hass, entry):
     ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if ok:
-        hass.data[DOMAIN].pop(entry.entry_id, None)
+        st = hass.data[DOMAIN].pop(entry.entry_id, None)
+        if st:
+            st["budget"].save()
     return ok
 
 

@@ -19,8 +19,8 @@ Control your **Imou robot vacuum** (built for the **RV-L11-A**) from Home Assist
 | **Buttons** | Locate robot, empty dust bin *(experimental)* |
 | **Binary sensors** | Charging, mop attached, cloud connection |
 
-All entities appear under **one device**. Updates are faster while the robot is cleaning (every 60 s) and slower
-when it is idle (every 5 minutes). After errors the integration backs off automatically. You can change both in the integration options.
+All entities appear under **one device**. Updates are faster while the robot is cleaning (every 60 s), slower when it is idle (every 5 minutes) and
+slower still when nothing has changed for a while (up to 15 minutes). After errors the integration backs off automatically.
 
 **Not available:** the floor map, cleaning schedule and room-by-room cleaning. The Imou cloud does not expose
 these in a readable form.
@@ -39,7 +39,17 @@ these in a readable form.
 3. Under **Products & Services → Device Access Service** click **Add Device** and add your robot with its serial number.
 4. Enter these in Home Assistant when the integration asks. The secret is stored only in your Home Assistant.
 
-Imou gives **30,000 free API calls per month**. The default update speed stays inside that limit with one robot.
+Imou gives **30,000 free API calls per month**. The integration protects that quota:
+
+* One update costs **one** API call (the access token is cached for days).
+* Updates slow down automatically while the robot is idle and nothing changes.
+* A **monthly budget** (default 15,000 calls, changeable in the options) acts as a hard ceiling: updates are
+  spread over the month and never go faster than the budget allows. At the limit it checks once an hour.
+* The diagnostic sensor **API calls this month** shows your usage.
+
+**Why polling?** The Imou cloud is the only way to reach this robot: it has no open network ports, so there is no local
+API. Imou's message push can notify about alarms and online status but, as far as we know, not about vacuum property
+changes, so polling stays the only option.
 
 ## Troubleshooting
 

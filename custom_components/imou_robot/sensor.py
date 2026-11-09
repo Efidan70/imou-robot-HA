@@ -16,6 +16,7 @@ async def async_setup_entry(hass, entry, add):
     c, i, d = s["coord"], s["imou"], entry
     E = EntityCategory.DIAGNOSTIC
     add([
+        ImouApiCalls(c, i, d, s["budget"]),
         ImouSensor(c, i, d, "battery", "Battery", P_BATTERY, "%", SensorDeviceClass.BATTERY, lambda v: abs(_int(v)) if _int(v) is not None else None),
         ImouSensor(c, i, d, "area", "Cleaned area", P_AREA, "m\u00b2", None, _int),
         ImouSensor(c, i, d, "time", "Cleaning time", P_TIME, "min", None, _int),
@@ -43,3 +44,24 @@ class ImouSensor(ImouEntity, SensorEntity):
     def native_value(self):
         v = self._v(self._ref)
         return None if v is None else self._conv(v)
+
+
+class ImouApiCalls(ImouEntity, SensorEntity):
+    """Imou API calls used this month (the free quota is 30,000)."""
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_icon = "mdi:cloud-braces"
+    _attr_state_class = SensorStateClass.TOTAL
+    _attr_native_unit_of_measurement = "calls"
+
+    def __init__(self, c, i, entry, budget):
+        super().__init__(c, i, entry, "api_calls", "API calls this month")
+        self._budget = budget
+
+    @property
+    def native_value(self):
+        return self._budget.calls
+
+    @property
+    def extra_state_attributes(self):
+        return {"monthly_budget": self._budget.budget, "budget_used_percent": self._budget.percent,
+                "month": self._budget.month}

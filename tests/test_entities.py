@@ -41,3 +41,16 @@ def test_sign_vector():
     from custom_components.imou_robot.api import calc_sign
     assert calc_sign(1706511734, "f5a1ae2d-c09c-4d39-a744-83a5c2c653c2",
                      "test123456789test123456789") == "xjhCQBoJ9hRDsCjyDcHjtDNzRZ3ZJezcawsfWeiaoxU="
+
+
+def test_budget_floor_and_count():
+    from datetime import datetime
+    from custom_components.imou_robot.budget import Budget
+    b = Budget.__new__(Budget)
+    b.budget, b.calls, b.month, b._unsaved = 15000, 0, Budget._key(), 0
+    b.save = lambda: None
+    now = datetime(2026, 11, 1, 0, 0, 0)
+    assert round(b.floor_interval(now)) == 173            # 30 days / 15,000 calls
+    b.calls = 15000
+    assert b.floor_interval(now) == 3600                  # budget used up
+    b.calls = 0; b.count(); assert b.calls == 1 and b.percent == 0.0

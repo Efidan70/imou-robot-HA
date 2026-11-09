@@ -4,7 +4,8 @@ from homeassistant.core import callback
 from homeassistant.helpers import selector
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from .api import ImouApi, ImouError
-from .const import (DOMAIN, DATACENTERS, CONF_IDLE, CONF_ACTIVE, DEFAULT_IDLE, DEFAULT_ACTIVE)
+from .const import (DOMAIN, DATACENTERS, CONF_IDLE, CONF_ACTIVE, CONF_DEEP, CONF_BUDGET,
+                    DEFAULT_IDLE, DEFAULT_ACTIVE, DEFAULT_DEEP, DEFAULT_BUDGET)
 
 
 class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
@@ -86,12 +87,16 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 class OptionsFlow(config_entries.OptionsFlow):
     async def async_step_init(self, user_input=None):
         if user_input is not None:
-            return self.async_create_entry(data=user_input)
+            return self.async_create_entry(data={k: int(v) for k, v in user_input.items()})
         o = self.config_entry.options
         schema = vol.Schema({
             vol.Required(CONF_IDLE, default=o.get(CONF_IDLE, DEFAULT_IDLE)): selector.NumberSelector(
                 selector.NumberSelectorConfig(min=120, max=1800, step=10, unit_of_measurement="s", mode="box")),
             vol.Required(CONF_ACTIVE, default=o.get(CONF_ACTIVE, DEFAULT_ACTIVE)): selector.NumberSelector(
                 selector.NumberSelectorConfig(min=30, max=300, step=5, unit_of_measurement="s", mode="box")),
+            vol.Required(CONF_DEEP, default=o.get(CONF_DEEP, DEFAULT_DEEP)): selector.NumberSelector(
+                selector.NumberSelectorConfig(min=300, max=3600, step=60, unit_of_measurement="s", mode="box")),
+            vol.Required(CONF_BUDGET, default=o.get(CONF_BUDGET, DEFAULT_BUDGET)): selector.NumberSelector(
+                selector.NumberSelectorConfig(min=1000, max=30000, step=500, unit_of_measurement="calls", mode="box")),
         })
         return self.async_show_form(step_id="init", data_schema=schema)

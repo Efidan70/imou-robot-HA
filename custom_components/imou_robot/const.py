@@ -6,7 +6,8 @@ DATACENTERS = {
     "or": "https://openapi-or.easy4ip.com",   # Oregon (Americas)
 }
 CONF_IDLE, CONF_ACTIVE = "idle_interval", "active_interval"
-DEFAULT_IDLE, DEFAULT_ACTIVE = 300, 60
+CONF_DEEP, CONF_BUDGET = "deep_idle_interval", "monthly_budget"
+DEFAULT_IDLE, DEFAULT_ACTIVE, DEFAULT_DEEP, DEFAULT_BUDGET = 300, 60, 900, 15000
 # Thing-model refs of the Imou RV-L11-A
 P_STATUS, P_BATTERY, P_FAN, P_WATER, P_DOCK = "12300", "11600", "1027", "1028", "1019"
 P_AREA, P_TIME, P_MOP = "1020", "1021", "1029"

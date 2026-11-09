@@ -38,11 +38,13 @@
   "options": {
     "step": {
       "init": {
-        "title": "Verversingssnelheid",
-        "description": "Imou geeft 30.000 gratis API-aanroepen per maand. Elke 300 s verversen in rust en elke 60 s tijdens het schoonmaken past daarbinnen.",
+        "title": "Updatesnelheid en API-budget",
+        "description": "Imou geeft 30.000 gratis API-aanroepen per maand. Updates worden vanzelf trager als er niets verandert en gaan nooit sneller dan je maandbudget toelaat. De sensor 'API-aanroepen deze maand' toont je verbruik.",
         "data": {
-          "idle_interval": "Seconden tussen updates in rust",
-          "active_interval": "Seconden tussen updates tijdens schoonmaken"
+          "idle_interval": "Seconden tussen updates als de robot stilstaat",
+          "active_interval": "Seconden tussen updates tijdens het stofzuigen",
+          "deep_idle_interval": "Traagste interval (s) als er een tijd niets verandert",
+          "monthly_budget": "Maandbudget API-aanroepen (gratis quota is 30.000)"
         }
       }
     }
